@@ -1,9 +1,13 @@
 // ============ GUARD ============
 if (window.__TG_BLOCKED__) throw new Error("Telegram WebApp required");
 if (!window.__SS) throw new Error("Secure storage not loaded");
+if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
 (function () {
   "use strict";
+
+  const SND = window.__SND;
+  const PT  = window.__PT;
 
   // ===== SOZLAMALAR =====
   const AD_THRESHOLD      = 0.0002;
@@ -31,10 +35,16 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     saveWalletBtn: document.getElementById("saveWalletBtn"),
     withdrawBtn:   document.getElementById("withdrawBtn"),
     toast:         document.getElementById("toast"),
+    soundToggle:   document.getElementById("soundToggle"),
   };
 
   // ===== STATE =====
   const state = { balance: 0, mined: 0, lastBonus: 0, wallet: "" };
+
+  // Balance display
+  let displayValue  = 0;
+  let balanceAnimId = 0;
+  let firstRender   = true;
 
   // ===== HELPERS =====
   function formatMoney(n) { return "$" + n.toFixed(5); }
@@ -62,6 +72,38 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
       if (type === "success" || type === "error" || type === "warning") hf.notificationOccurred(type);
       else hf.impactOccurred(type || "medium");
     } catch (e) {}
+  }
+
+  function setBalanceImmediate(val) {
+    balanceAnimId++;
+    displayValue = val;
+    els.balance.textContent = formatMoney(val);
+  }
+
+  function animateBalance(target) {
+    const myId = ++balanceAnimId;
+    const start = displayValue;
+    const diff = target - start;
+
+    if (Math.abs(diff) < 0.0000001) {
+      displayValue = target;
+      els.balance.textContent = formatMoney(target);
+      return;
+    }
+
+    const duration = Math.abs(diff) > 0.0005 ? 700 : 900;
+    const startTime = performance.now();
+
+    function step(now) {
+      if (myId !== balanceAnimId) return;
+      const p = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      displayValue = start + diff * eased;
+      els.balance.textContent = formatMoney(displayValue);
+      if (p < 1) requestAnimationFrame(step);
+      else displayValue = target;
+    }
+    requestAnimationFrame(step);
   }
 
   // ===== STORAGE =====
@@ -114,7 +156,12 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
   }
 
   function renderBalance() {
-    els.balance.textContent = formatMoney(state.balance);
+    if (firstRender) {
+      setBalanceImmediate(state.balance);
+      firstRender = false;
+    } else {
+      animateBalance(state.balance);
+    }
   }
 
   function renderStats() {
@@ -166,6 +213,7 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
     if (val.length < WALLET_MIN_LEN) {
       haptic("error");
+      SND.error();
       showToast("❌ Manzil juda qisqa (min " + WALLET_MIN_LEN + " belgi)", "var(--red)");
       return;
     }
@@ -174,6 +222,7 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     window.__SS.saveWallet(val);
 
     haptic("success");
+    SND.success();
     showToast("✅ Hamyon manzili saqlandi", "var(--green)");
     renderWithdrawBtn();
   }
@@ -183,11 +232,13 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
     if (state.balance < WITHDRAW_MIN) {
       haptic("error");
+      SND.error();
       showToast(`❌ Minimal yechish: $${WITHDRAW_MIN.toFixed(2)}`, "var(--red)");
       return;
     }
     if (state.wallet.length < WALLET_MIN_LEN) {
       haptic("error");
+      SND.error();
       showToast("❌ Avval hamyon manzilini kiriting", "var(--red)");
       return;
     }
@@ -211,10 +262,24 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     if (arr.length > 50) arr.splice(0, arr.length - 50);
     window.__SS.saveWithdrawals(arr);
 
+    SND.bonus();
+    setTimeout(() => SND.coin(), 100);
+    haptic("success");
+
     showToast(
       `✅ So'rov qabul qilindi: $${request.amount.toFixed(5)}\nAdmin tez orada ko'rib chiqadi`,
       "var(--green)"
     );
+  }
+
+  // ===== SOUND TOGGLE =====
+  if (els.soundToggle) {
+    els.soundToggle.textContent = SND.isEnabled() ? "🔊" : "🔇";
+    els.soundToggle.addEventListener("click", () => {
+      const on = SND.toggle();
+      els.soundToggle.textContent = on ? "🔊" : "🔇";
+      if (on) SND.click();
+    });
   }
 
   // ===== EVENTS =====
@@ -242,6 +307,8 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
   // ===== INIT =====
   (async function init() {
+    PT.init(25);
+
     loadLocal();
     await loadCloud();
 

@@ -1,9 +1,13 @@
 // ============ GUARD ============
 if (window.__TG_BLOCKED__) throw new Error("Telegram WebApp required");
 if (!window.__SS) throw new Error("Secure storage not loaded");
+if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
 (function () {
   "use strict";
+
+  const SND = window.__SND;
+  const PT  = window.__PT;
 
   // ===== SOZLAMALAR =====
   const START_BALANCE = 0.00001;
@@ -23,8 +27,10 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
   const bonusCard    = document.getElementById("bonusCard");
   const bonusBtn     = document.getElementById("bonusBtn");
   const bonusCountEl = document.getElementById("bonusCountdown");
+  const pickaxeEl    = document.getElementById("pickaxe");
+  const soundToggleEl = document.getElementById("soundToggle");
 
-  // ===== STATE (private) =====
+  // ===== STATE =====
   let balance      = 0;
   let minedSinceAd = 0;
   let lastBonusAt  = 0;
@@ -33,20 +39,25 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
   let running      = false;
   let adController = null;
 
+  // Display state
+  let displayValue  = 0;
+  let balanceAnimId = 0;
+  let tickCounter   = 0;
+  let firstRender   = true;
+
   // ===== TELEGRAM =====
   if (window.Telegram?.WebApp) {
     Telegram.WebApp.ready();
     Telegram.WebApp.expand();
   }
 
-  // ===== HONEYPOT: window.balance ni ushlash =====
+  // ===== HONEYPOT =====
   try {
     let _hp = 0;
     Object.defineProperty(window, "balance", {
       get: function () { return _hp; },
       set: function (v) {
         _hp = v;
-        // Tuzoq! Global balansni o'zgartirishga urinish
         try {
           document.body.innerHTML = "";
           document.body.style.cssText =
@@ -70,8 +81,52 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   }
 
+  // ===== BALANCE COUNT-UP =====
+  function setBalanceImmediate(val) {
+    balanceAnimId++;
+    displayValue = val;
+    balanceEl.textContent = formatMoney(val);
+  }
+
+  function animateBalance(target) {
+    const myId = ++balanceAnimId;
+    const start = displayValue;
+    const diff = target - start;
+
+    if (Math.abs(diff) < 0.0000001) {
+      displayValue = target;
+      balanceEl.textContent = formatMoney(target);
+      return;
+    }
+
+    const absDiff = Math.abs(diff);
+    // Mining tick (kichik farq) — 900ms = deyarli sekundga teng (silliq)
+    // Bonus/big change — 700ms (tezroq, aks holda juda sekin ko'rinadi)
+    const duration = absDiff > 0.0005 ? 700 : 900;
+    const startTime = performance.now();
+
+    function step(now) {
+      if (myId !== balanceAnimId) return;
+      const p = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      displayValue = start + diff * eased;
+      balanceEl.textContent = formatMoney(displayValue);
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        displayValue = target;
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
   function updateUI() {
-    balanceEl.textContent = formatMoney(balance);
+    if (firstRender) {
+      setBalanceImmediate(balance);
+      firstRender = false;
+    } else {
+      animateBalance(balance);
+    }
     const pct = Math.min((minedSinceAd / AD_THRESHOLD) * 100, 100);
     progressEl.style.width = pct + "%";
   }
@@ -121,17 +176,25 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     if (balance <= 0) balance = START_BALANCE;
 
     running = true;
+    tickCounter = 0;
     startBtn.disabled = true;
     startBtn.textContent = "Ishlamoqda...";
     setStatus("⛏️ Mining ishlamoqda...");
+
+    if (pickaxeEl) pickaxeEl.classList.add("active");
+
     updateUI();
     saveState();
 
     timer = setInterval(() => {
       balance      += PER_TICK;
       minedSinceAd += PER_TICK;
+      tickCounter++;
       saveState();
       updateUI();
+
+      // Har 5 sekundda yumshoq tick ovozi
+      if (tickCounter % 5 === 0) SND.tick();
 
       if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
         stopMining();
@@ -142,6 +205,7 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
   function stopMining() {
     running = false;
+    if (pickaxeEl) pickaxeEl.classList.remove("active");
     if (timer) { clearInterval(timer); timer = null; }
   }
 
@@ -157,6 +221,7 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
       setStatus("❌ Reklama yuklanmadi. Qayta urinib ko'ring.");
       startBtn.disabled = false;
       startBtn.textContent = "Qayta urinish";
+      SND.error();
       return;
     }
 
@@ -167,6 +232,7 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
         saveState();
         updateUI();
         haptic("notify", "success");
+        SND.success();
 
         setTimeout(() => {
           startBtn.disabled = false;
@@ -178,10 +244,11 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
         setStatus("⚠️ Reklama to'liq ko'rilmadi. Qayta urinib ko'ring.");
         startBtn.disabled = false;
         startBtn.textContent = "Qayta urinish";
+        SND.error();
       });
   }
 
-  // ===== KUNLIK BONUS (safeNow bilan) =====
+  // ===== KUNLIK BONUS =====
   function canClaimBonus() {
     const now = window.__SS.safeNow();
     return now - lastBonusAt >= BONUS_INTERVAL_MS;
@@ -194,7 +261,6 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
   function updateBonusUI() {
     const ready = canClaimBonus();
-
     if (ready) {
       bonusBtn.disabled = false;
       bonusBtn.textContent = "🎁 Bonusni olish";
@@ -259,12 +325,26 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
     pulseBalance();
     playCoinAnimation(bonusBtn);
 
+    SND.bonus();
+    setTimeout(() => SND.coin(), 100);
     setTimeout(() => haptic("notify", "success"), 150);
+
     setStatus(`🎁 +$${BONUS_AMOUNT.toFixed(3)} bonus qo'shildi!`);
+  }
+
+  // ===== SOUND TOGGLE =====
+  if (soundToggleEl) {
+    soundToggleEl.textContent = SND.isEnabled() ? "🔊" : "🔇";
+    soundToggleEl.addEventListener("click", () => {
+      const on = SND.toggle();
+      soundToggleEl.textContent = on ? "🔊" : "🔇";
+      if (on) SND.click();
+    });
   }
 
   // ===== EVENTS =====
   startBtn.addEventListener("click", () => {
+    SND.click();
     haptic("impact", "light");
     if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
       showAd();
@@ -277,6 +357,9 @@ if (!window.__SS) throw new Error("Secure storage not loaded");
 
   // ===== INIT =====
   (async function init() {
+    // Particles background
+    PT.init(35);
+
     loadState();
     await loadCloudState();
     updateUI();
