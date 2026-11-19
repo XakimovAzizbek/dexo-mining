@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>⛏️ Mining</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1 class="title">⛏️ Mining</h1>
+
+      <div class="balance-box">
+        <div class="balance-label">Balans</div>
+        <div class="balance" id="balance">$0.00000</div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+
+      <div class="status" id="status">Boshlash uchun tugmani bosing</div>
+
+      <button id="startBtn" class="btn">Boshlash</button>
+    </div>
+
+    <!-- ⭐ KUNLIK BONUS KARTASI -->
+    <div class="bonus-card" id="bonusCard">
+      <div class="bonus-header">
+        <span class="bonus-icon">🎁</span>
+        <span class="bonus-title">Kunlik bonus</span>
+      </div>
+      <div class="bonus-amount">$0.001</div>
+      <button id="bonusBtn" class="bonus-btn">🎁 Bonusni olish</button>
+      <div class="bonus-countdown" id="bonusCountdown">Tayyor!</div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Asosiy</span>
+    </a>
+    <a href="profile.html" class="nav-item">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profil</span>
+    </a>
+  </nav>
+
+  <script src="index.js"></script>
+</body>
+</html>

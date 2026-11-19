@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>👤 Profil</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="card">
+      <h1 class="title">👤 Profil</h1>
+
+      <div class="avatar-wrap">
+        <div class="avatar" id="avatar">👤</div>
+      </div>
+
+      <div class="user-name" id="userName">Foydalanuvchi</div>
+      <div class="user-username" id="userUsername"></div>
+
+      <div class="balance-box" style="margin-top: 24px;">
+        <div class="balance-label">Umumiy balans</div>
+        <div class="balance" id="balance">$0.00000</div>
+      </div>
+
+      <div class="info-row">
+        <span class="info-label">Mining holati</span>
+        <span class="info-value" id="statusText">Faol emas</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">Keyingi reklamagacha</span>
+        <span class="info-value" id="nextAdText">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">🎁 Kunlik bonus</span>
+        <span class="info-value" id="bonusText">Tayyor!</span>
+      </div>
+    </div>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Asosiy</span>
+    </a>
+    <a href="profile.html" class="nav-item active">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">Profil</span>
+    </a>
+  </nav>
+
+  <script src="profile.js"></script>
+</body>
+</html>
