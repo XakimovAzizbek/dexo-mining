@@ -1,3 +1,8 @@
+// ============ GUARD: Telegram bo'lmasa — hech narsa ishlamaydi ============
+if (window.__TG_BLOCKED__) {
+  throw new Error("Telegram WebApp required");
+}
+
 // ============ SOZLAMALAR ============
 const START_BALANCE = 0.00001;
 const PER_TICK      = 0.00002;
@@ -130,7 +135,7 @@ async function loadCloud() {
   }
   if (lbVal) {
     const c = parseFloat(lbVal) || 0;
-    if (c > lastBonusAt) lastBonusAt = c; // eng so'nggi claim vaqti
+    if (c > lastBonusAt) lastBonusAt = c;
   }
 }
 
@@ -247,7 +252,6 @@ function startBonusTicker() {
 
 function pulseBalance() {
   balanceEl.classList.remove("pulse");
-  // force reflow
   void balanceEl.offsetWidth;
   balanceEl.classList.add("pulse");
   setTimeout(() => balanceEl.classList.remove("pulse"), 800);

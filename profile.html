@@ -4,51 +4,106 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>👤 Profil</title>
+
+  <!-- Guard CSS -->
+  <style>
+    html {
+      background: #000;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      visibility: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    html.tg-ready body {
+      visibility: visible;
+    }
+  </style>
+
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="index.css" />
+  <script src="guard.js"></script>
+  <link rel="stylesheet" href="profile.css" />
 </head>
 <body>
   <div class="app">
-    <div class="card">
-      <h1 class="title">👤 Profil</h1>
 
-      <div class="avatar-wrap">
-        <div class="avatar" id="avatar">👤</div>
-      </div>
+    <!-- TOP BAR -->
+    <header class="topbar">
+      <h1>👤 Profil</h1>
+      <a href="index.html" class="back">←</a>
+    </header>
 
-      <div class="user-name" id="userName">Foydalanuvchi</div>
-      <div class="user-username" id="userUsername"></div>
+    <!-- USER CARD -->
+    <section class="user-card">
+      <div class="avatar-big" id="avatar">👤</div>
+      <div class="user-info">
+        <h2 id="userName">Foydalanuvchi</h2>
+        <p id="userUsername">@username</p>
+        <span class="user-id" id="userId">ID: —</span>
+      </div>
+    </section>
 
-      <div class="balance-box" style="margin-top: 24px;">
-        <div class="balance-label">Umumiy balans</div>
-        <div class="balance" id="balance">$0.00000</div>
-      </div>
+    <!-- BALANCE -->
+    <section class="balance-card">
+      <div class="label">Umumiy balans</div>
+      <div class="balance" id="balance">$0.00000</div>
+    </section>
 
-      <div class="info-row">
-        <span class="info-label">Mining holati</span>
-        <span class="info-value" id="statusText">Faol emas</span>
+    <!-- STATS -->
+    <section class="stats">
+      <div class="stat">
+        <span class="stat-ico">⛏️</span>
+        <span class="stat-label">Mining holati</span>
+        <span class="stat-value" id="statusText">Boshlanmagan</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">Keyingi reklamagacha</span>
-        <span class="info-value" id="nextAdText">—</span>
+      <div class="stat">
+        <span class="stat-ico">📺</span>
+        <span class="stat-label">Keyingi reklamagacha</span>
+        <span class="stat-value" id="nextAdText">—</span>
       </div>
-      <div class="info-row">
-        <span class="info-label">🎁 Kunlik bonus</span>
-        <span class="info-value" id="bonusText">Tayyor!</span>
+      <div class="stat">
+        <span class="stat-ico">🎁</span>
+        <span class="stat-label">Kunlik bonus</span>
+        <span class="stat-value" id="bonusText">Tayyor!</span>
       </div>
-    </div>
+      <div class="stat">
+        <span class="stat-ico">💵</span>
+        <span class="stat-label">Minimal yechish</span>
+        <span class="stat-value">$1.00</span>
+      </div>
+    </section>
+
+    <!-- WALLET -->
+    <section class="wallet-card">
+      <h3>💰 Pul yechish hamyoni</h3>
+      <p class="sub">TON yoki USDT (TRC20) manzilini kiriting</p>
+      <input type="text" id="walletInput" placeholder="UQ... yoki T..." autocomplete="off" spellcheck="false" />
+      <button class="btn primary" id="saveWalletBtn">💾 Manzilni saqlash</button>
+    </section>
+
+    <!-- ACTIONS -->
+    <section class="actions">
+      <button class="btn withdraw" id="withdrawBtn" disabled>💰 Pul yechish (min $1.00)</button>
+    </section>
+
   </div>
 
+  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item">
-      <span class="nav-icon">🏠</span>
-      <span class="nav-label">Asosiy</span>
+      <span class="ico">🏠</span>
+      <span>Asosiy</span>
     </a>
     <a href="profile.html" class="nav-item active">
-      <span class="nav-icon">👤</span>
-      <span class="nav-label">Profil</span>
+      <span class="ico">👤</span>
+      <span>Profil</span>
     </a>
   </nav>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
   <script src="profile.js"></script>
 </body>

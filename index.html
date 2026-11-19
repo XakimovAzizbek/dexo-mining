@@ -4,8 +4,33 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>⛏️ Mining</title>
+
+  <!-- Guard CSS: qora fon + body yashirin -->
+  <style>
+    html {
+      background: #000;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      visibility: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    html.tg-ready body {
+      visibility: visible;
+    }
+  </style>
+
+  <!-- Telegram SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Guard — Telegram tekshiruvi -->
+  <script src="guard.js"></script>
+
+  <!-- Adsgram SDK -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+
   <link rel="stylesheet" href="index.css" />
 </head>
 <body>
