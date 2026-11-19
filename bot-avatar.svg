@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#1a2a4a"/>
+      <stop offset="100%" stop-color="#060a12"/>
+    </radialGradient>
+    <linearGradient id="pickGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00e676"/>
+      <stop offset="100%" stop-color="#00b0ff"/>
+    </linearGradient>
+    <linearGradient id="handleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#8d6e3d"/>
+      <stop offset="100%" stop-color="#5a4424"/>
+    </linearGradient>
+    <linearGradient id="coinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffe75c"/>
+      <stop offset="100%" stop-color="#ffa500"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="15"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" fill="url(#bg)" rx="110"/>
+  
+  <!-- Radial glow behind pickaxe -->
+  <circle cx="256" cy="256" r="160" fill="#00e676" opacity="0.15" filter="url(#softGlow)"/>
+  <circle cx="256" cy="256" r="100" fill="#00b0ff" opacity="0.15" filter="url(#softGlow)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#00e676" stroke-width="1" opacity="0.15"/>
+  <circle cx="256" cy="256" r="230" fill="none" stroke="#00b0ff" stroke-width="1" opacity="0.08"/>
+
+  <!-- Stars/particles -->
+  <circle cx="120" cy="120" r="3" fill="#00e676" opacity="0.7"/>
+  <circle cx="400" cy="140" r="2.5" fill="#00b0ff" opacity="0.6"/>
+  <circle cx="90" cy="380" r="2" fill="#00e676" opacity="0.5"/>
+  <circle cx="420" cy="400" r="3" fill="#00b0ff" opacity="0.7"/>
+  <circle cx="160" cy="90" r="2" fill="#fff" opacity="0.4"/>
+  <circle cx="370" cy="90" r="2.5" fill="#fff" opacity="0.3"/>
+  <circle cx="80" cy="280" r="1.5" fill="#00e676" opacity="0.6"/>
+  <circle cx="440" cy="280" r="2" fill="#00b0ff" opacity="0.5"/>
+
+  <!-- Pickaxe Handle -->
+  <rect x="240" y="270" width="32" height="150" rx="12" fill="url(#handleGrad)" stroke="#3a2a10" stroke-width="2" transform="rotate(35 256 345)"/>
+  
+  <!-- Pickaxe Head Glow -->
+  <g filter="url(#glow)">
+    <!-- Main pickaxe head -->
+    <path d="M 130 210 Q 180 165 256 175 Q 332 165 382 210 Q 340 225 300 210 Q 280 200 256 200 Q 232 200 212 210 Q 172 225 130 210 Z" 
+          fill="url(#pickGrad)" stroke="#00e676" stroke-width="2"/>
+    <!-- Highlight -->
+    <path d="M 160 205 Q 200 180 256 185 Q 312 180 352 205" 
+          fill="none" stroke="#ffffff" stroke-width="3" opacity="0.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sparkles around pickaxe -->
+  <g filter="url(#glow)">
+    <path d="M 380 200 L 385 215 L 400 220 L 385 225 L 380 240 L 375 225 L 360 220 L 375 215 Z" fill="#ffe75c"/>
+    <path d="M 130 220 L 133 230 L 143 233 L 133 236 L 130 246 L 127 236 L 117 233 L 127 230 Z" fill="#ffe75c" opacity="0.8"/>
+    <path d="M 400 320 L 402 327 L 409 329 L 402 331 L 400 338 L 398 331 L 391 329 L 398 327 Z" fill="#00e676" opacity="0.9"/>
+  </g>
+
+  <!-- Coin/gem at bottom -->
+  <g filter="url(#glow)">
+    <circle cx="256" cy="430" r="32" fill="url(#coinGrad)" stroke="#ffe75c" stroke-width="3"/>
+    <text x="256" y="442" font-family="Arial Black, sans-serif" font-size="36" font-weight="900" fill="#7a5200" text-anchor="middle">$</text>
+  </g>
+
+  <!-- Floating small coins -->
+  <circle cx="160" cy="420" r="12" fill="url(#coinGrad)" opacity="0.7"/>
+  <circle cx="352" cy="420" r="10" fill="url(#coinGrad)" opacity="0.6"/>
+  <circle cx="380" cy="360" r="8" fill="url(#coinGrad)" opacity="0.5"/>
+</svg>
