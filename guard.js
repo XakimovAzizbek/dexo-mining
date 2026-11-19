@@ -1,65 +1,86 @@
-// ============ TELEGRAM GUARD ============
-// Faqat Telegram Mini App ichida ishlaydi.
-// Brauzerda ochilsa — ekran qora bo'lib qoladi.
+// ============ GUARD v2: Telegram + Domain + initData ============
 (function () {
   "use strict";
 
-  var tg = (window.Telegram && window.Telegram.WebApp) || null;
+  // ⚠️ O'Z DOMEningizni kiriting! (bo'sh = o'tkazib yuboriladi)
+  var ALLOWED_ORIGINS = [
+    // "https://your-app.vercel.app",
+    // "https://your-app.netlify.app",
+    // "https://your-app.pages.dev",
+  ];
 
-  // initData faqat Telegram ichida to'ldiriladi
-  var inTelegram = !!(
-    tg && (
-      (typeof tg.initData === "string" && tg.initData.length > 0) ||
-      (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id)
-    )
-  );
-
-  window.__TG_BLOCKED__ = !inTelegram;
-
-  if (inTelegram) {
-    // Body ko'rinadigan bo'ladi (CSS orqali)
-    document.documentElement.classList.add("tg-ready");
-    return;
-  }
-
-  // ===== BLOKLANGAN =====
-  // Darhol qora fon
-  try {
-    document.documentElement.style.cssText =
-      "background:#000 !important;background-color:#000 !important;" +
-      "margin:0 !important;padding:0 !important;" +
-      "width:100% !important;height:100% !important;" +
-      "overflow:hidden !important;";
-  } catch (e) {}
-
-  function lock() {
+  function blackScreen() {
     try {
-      var body = document.body;
-      if (!body) return;
-
-      // Body bo'shatiladi va qora qilinadi
-      if (body.innerHTML.length > 0) body.innerHTML = "";
-      body.style.cssText =
+      document.documentElement.style.cssText =
         "background:#000 !important;background-color:#000 !important;" +
         "margin:0 !important;padding:0 !important;" +
-        "width:100vw !important;height:100vh !important;" +
-        "overflow:hidden !important;" +
-        "visibility:hidden !important;" +
-        "position:fixed !important;inset:0 !important;" +
-        "z-index:2147483647 !important;";
+        "width:100% !important;height:100% !important;" +
+        "overflow:hidden !important;";
+    } catch (e) {}
+    try {
+      var b = document.body;
+      if (b) {
+        if (b.innerHTML.length > 0) b.innerHTML = "";
+        b.style.cssText =
+          "background:#000 !important;background-color:#000 !important;" +
+          "margin:0 !important;padding:0 !important;" +
+          "width:100vw !important;height:100vh !important;" +
+          "overflow:hidden !important;" +
+          "visibility:hidden !important;" +
+          "position:fixed !important;inset:0 !important;" +
+          "z-index:2147483647 !important;";
+      }
     } catch (e) {}
   }
 
-  if (document.body) lock();
-  document.addEventListener("DOMContentLoaded", lock);
-  window.addEventListener("load", lock);
+  function block() {
+    window.__TG_BLOCKED__ = true;
+    blackScreen();
+    document.addEventListener("DOMContentLoaded", blackScreen);
+    window.addEventListener("load", blackScreen);
+    var n = 0;
+    var iv = setInterval(function () {
+      n++;
+      blackScreen();
+      if (n >= 20) clearInterval(iv);
+    }, 150);
+  }
 
-  // Kechikkan injectlarga qarshi — 20 marta tekshiradi (~3 sekund)
-  var attempts = 0;
-  var iv = setInterval(function () {
-    attempts++;
-    if (!window.__TG_BLOCKED__) { clearInterval(iv); return; }
-    lock();
-    if (attempts >= 20) clearInterval(iv);
-  }, 150);
+  // 1) DOMAIN LOCK
+  if (ALLOWED_ORIGINS.length > 0) {
+    var origin = window.location.origin;
+    if (ALLOWED_ORIGINS.indexOf(origin) === -1) return block();
+  }
+
+  // 2) TELEGRAM MAVJUDLIGI
+  var tg = (window.Telegram && window.Telegram.WebApp) || null;
+  if (!tg) return block();
+
+  // 3) initData STRUKTURA VALIDATSIYASI
+  var initData = tg.initData || "";
+  var user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+
+  if (!initData || initData.length < 50) return block();
+  if (!user || typeof user.id !== "number" || user.id <= 0) return block();
+
+  var authDate = parseInt((tg.initDataUnsafe && tg.initDataUnsafe.auth_date) || "0", 10);
+  if (!authDate) return block();
+  // auth_date kelajakda bo'lmasligi
+  if (authDate * 1000 > Date.now() + 60 * 60 * 1000) return block();
+
+  // hash parametri bor-yo'qligi
+  var hasHash = false;
+  try {
+    var params = new URLSearchParams(initData);
+    hasHash = !!params.get("hash");
+  } catch (e) {}
+  if (!hasHash) return block();
+
+  // Platform whitelist
+  var platforms = ["android", "ios", "tdesktop", "macos", "web", "weba", "webk", "webz"];
+  if (platforms.indexOf(tg.platform) === -1) return block();
+
+  // ✅ O'TDI
+  window.__TG_BLOCKED__ = false;
+  document.documentElement.classList.add("tg-ready");
 })();

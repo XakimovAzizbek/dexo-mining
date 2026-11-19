@@ -3,39 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'none';" />
   <title>👤 Profil</title>
 
-  <!-- Guard CSS -->
   <style>
-    html {
-      background: #000;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      visibility: hidden;
-      margin: 0;
-      padding: 0;
-    }
-    html.tg-ready body {
-      visibility: visible;
-    }
+    html { background: #000; margin: 0; padding: 0; }
+    body { visibility: hidden; margin: 0; padding: 0; }
+    html.tg-ready body { visibility: visible; }
   </style>
 
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script src="guard.js"></script>
+  <script src="secure.js"></script>
   <link rel="stylesheet" href="profile.css" />
 </head>
 <body>
   <div class="app">
-
-    <!-- TOP BAR -->
     <header class="topbar">
       <h1>👤 Profil</h1>
       <a href="index.html" class="back">←</a>
     </header>
 
-    <!-- USER CARD -->
     <section class="user-card">
       <div class="avatar-big" id="avatar">👤</div>
       <div class="user-info">
@@ -45,13 +33,11 @@
       </div>
     </section>
 
-    <!-- BALANCE -->
     <section class="balance-card">
       <div class="label">Umumiy balans</div>
       <div class="balance" id="balance">$0.00000</div>
     </section>
 
-    <!-- STATS -->
     <section class="stats">
       <div class="stat">
         <span class="stat-ico">⛏️</span>
@@ -75,7 +61,6 @@
       </div>
     </section>
 
-    <!-- WALLET -->
     <section class="wallet-card">
       <h3>💰 Pul yechish hamyoni</h3>
       <p class="sub">TON yoki USDT (TRC20) manzilini kiriting</p>
@@ -83,14 +68,11 @@
       <button class="btn primary" id="saveWalletBtn">💾 Manzilni saqlash</button>
     </section>
 
-    <!-- ACTIONS -->
     <section class="actions">
       <button class="btn withdraw" id="withdrawBtn" disabled>💰 Pul yechish (min $1.00)</button>
     </section>
-
   </div>
 
-  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
     <a href="index.html" class="nav-item">
       <span class="ico">🏠</span>
@@ -102,9 +84,7 @@
     </a>
   </nav>
 
-  <!-- TOAST -->
   <div class="toast" id="toast"></div>
-
   <script src="profile.js"></script>
 </body>
 </html>

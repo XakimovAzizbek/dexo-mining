@@ -3,56 +3,36 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'none';" />
   <title>⛏️ Mining</title>
 
-  <!-- Guard CSS: qora fon + body yashirin -->
   <style>
-    html {
-      background: #000;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      visibility: hidden;
-      margin: 0;
-      padding: 0;
-    }
-    html.tg-ready body {
-      visibility: visible;
-    }
+    html { background: #000; margin: 0; padding: 0; }
+    body { visibility: hidden; margin: 0; padding: 0; }
+    html.tg-ready body { visibility: visible; }
   </style>
 
-  <!-- Telegram SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-  <!-- Guard — Telegram tekshiruvi -->
   <script src="guard.js"></script>
-
-  <!-- Adsgram SDK -->
   <script src="https://sad.adsgram.ai/js/sad.min.js"></script>
-
+  <script src="secure.js"></script>
   <link rel="stylesheet" href="index.css" />
 </head>
 <body>
   <div class="app">
     <div class="card">
       <h1 class="title">⛏️ Mining</h1>
-
       <div class="balance-box">
         <div class="balance-label">Balans</div>
         <div class="balance" id="balance">$0.00000</div>
       </div>
-
       <div class="progress-wrap">
         <div class="progress-bar" id="progressBar"></div>
       </div>
-
       <div class="status" id="status">Boshlash uchun tugmani bosing</div>
-
       <button id="startBtn" class="btn">Boshlash</button>
     </div>
 
-    <!-- ⭐ KUNLIK BONUS KARTASI -->
     <div class="bonus-card" id="bonusCard">
       <div class="bonus-header">
         <span class="bonus-icon">🎁</span>

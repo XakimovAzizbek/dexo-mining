@@ -16,10 +16,7 @@ body {
   color: #fff;
 }
 
-.app {
-  width: 100%;
-  max-width: 400px;
-}
+.app { width: 100%; max-width: 400px; }
 
 .card {
   background: rgba(255, 255, 255, 0.05);
@@ -31,27 +28,10 @@ body {
   text-align: center;
 }
 
-.title {
-  font-size: 26px;
-  font-weight: 700;
-  margin-bottom: 24px;
-  letter-spacing: 0.5px;
-}
+.title { font-size: 26px; font-weight: 700; margin-bottom: 24px; letter-spacing: 0.5px; }
 
-.balance-box {
-  background: rgba(0, 0, 0, 0.25);
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.balance-label {
-  font-size: 13px;
-  color: #8f8fb8;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  margin-bottom: 8px;
-}
+.balance-box { background: rgba(0, 0, 0, 0.25); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+.balance-label { font-size: 13px; color: #8f8fb8; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
 
 .balance {
   font-size: 36px;
@@ -61,10 +41,7 @@ body {
   text-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
   transition: color 0.3s ease;
 }
-
-.balance.pulse {
-  animation: balancePulse 0.7s ease;
-}
+.balance.pulse { animation: balancePulse 0.7s ease; }
 
 @keyframes balancePulse {
   0%   { transform: scale(1);    color: #00e676; }
@@ -72,28 +49,10 @@ body {
   100% { transform: scale(1);    color: #00e676; }
 }
 
-.progress-wrap {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 18px;
-}
+.progress-wrap { height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 8px; overflow: hidden; margin-bottom: 18px; }
+.progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #00e676, #00b0ff); border-radius: 8px; transition: width 0.4s ease; }
 
-.progress-bar {
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, #00e676, #00b0ff);
-  border-radius: 8px;
-  transition: width 0.4s ease;
-}
-
-.status {
-  font-size: 14px;
-  color: #b0b0d0;
-  min-height: 20px;
-  margin-bottom: 22px;
-}
+.status { font-size: 14px; color: #b0b0d0; min-height: 20px; margin-bottom: 22px; }
 
 .btn {
   width: 100%;
@@ -107,11 +66,9 @@ body {
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.2s ease;
 }
-
 .btn:active { transform: scale(0.97); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-/* ============ KUNLIK BONUS ============ */
 .bonus-card {
   margin-top: 20px;
   background: linear-gradient(145deg, rgba(255, 215, 0, 0.08), rgba(255, 165, 0, 0.03));
@@ -122,49 +79,19 @@ body {
   box-shadow: 0 10px 40px rgba(255, 215, 0, 0.08);
   animation: cardFadeIn 0.6s ease both;
 }
+@keyframes cardFadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-@keyframes cardFadeIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.bonus-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.bonus-icon {
-  font-size: 22px;
-  display: inline-block;
-  animation: giftShake 3s ease-in-out infinite;
-}
-
+.bonus-header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+.bonus-icon { font-size: 22px; display: inline-block; animation: giftShake 3s ease-in-out infinite; }
 @keyframes giftShake {
   0%, 80%, 100% { transform: rotate(0deg); }
-  85%           { transform: rotate(-12deg); }
-  90%           { transform: rotate(12deg); }
-  95%           { transform: rotate(-6deg); }
+  85% { transform: rotate(-12deg); }
+  90% { transform: rotate(12deg); }
+  95% { transform: rotate(-6deg); }
 }
 
-.bonus-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffd700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.bonus-amount {
-  font-size: 32px;
-  font-weight: 800;
-  color: #ffd700;
-  text-shadow: 0 0 25px rgba(255, 215, 0, 0.5);
-  margin-bottom: 16px;
-  font-variant-numeric: tabular-nums;
-}
+.bonus-title { font-size: 15px; font-weight: 700; color: #ffd700; text-transform: uppercase; letter-spacing: 1px; }
+.bonus-amount { font-size: 32px; font-weight: 800; color: #ffd700; text-shadow: 0 0 25px rgba(255, 215, 0, 0.5); margin-bottom: 16px; font-variant-numeric: tabular-nums; }
 
 .bonus-btn {
   width: 100%;
@@ -178,24 +105,12 @@ body {
   cursor: pointer;
   transition: transform 0.15s ease, opacity 0.2s ease;
 }
-
 .bonus-btn:active { transform: scale(0.96); }
-
-.bonus-btn.ready {
-  animation: bonusGlow 2s ease-in-out infinite;
-}
-
+.bonus-btn.ready { animation: bonusGlow 2s ease-in-out infinite; }
 @keyframes bonusGlow {
-  0%, 100% {
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.35),
-                inset 0 0 0 rgba(255, 255, 255, 0);
-  }
-  50% {
-    box-shadow: 0 0 42px rgba(255, 215, 0, 0.85),
-                inset 0 0 20px rgba(255, 255, 255, 0.15);
-  }
+  0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.35), inset 0 0 0 rgba(255, 255, 255, 0); }
+  50% { box-shadow: 0 0 42px rgba(255, 215, 0, 0.85), inset 0 0 20px rgba(255, 255, 255, 0.15); }
 }
-
 .bonus-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
@@ -204,19 +119,9 @@ body {
   color: #b0b0d0;
   animation: none;
 }
-
-.bonus-countdown {
-  margin-top: 14px;
-  font-size: 14px;
-  color: #8f8fb8;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  letter-spacing: 1px;
-}
-
+.bonus-countdown { margin-top: 14px; font-size: 14px; color: #8f8fb8; font-variant-numeric: tabular-nums; font-weight: 600; letter-spacing: 1px; }
 .bonus-card.ready-state .bonus-countdown { color: #00e676; }
 
-/* ============ COIN ANIMATION ============ */
 .coin {
   position: fixed;
   font-size: 26px;
@@ -225,23 +130,15 @@ body {
   animation: coinBurst 1.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform, opacity;
 }
-
 @keyframes coinBurst {
-  0% {
-    transform: translate(-50%, -50%) scale(0.3) rotate(0deg);
-    opacity: 1;
-  }
+  0% { transform: translate(-50%, -50%) scale(0.3) rotate(0deg); opacity: 1; }
   40% { opacity: 1; }
   100% {
-    transform: translate(
-      calc(-50% + var(--tx)),
-      calc(-50% + var(--ty))
-    ) scale(1.4) rotate(360deg);
+    transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1.4) rotate(360deg);
     opacity: 0;
   }
 }
 
-/* ============ BOTTOM NAV ============ */
 .bottom-nav {
   position: fixed;
   bottom: 0;
@@ -254,7 +151,6 @@ body {
   padding: 10px 0 max(10px, env(safe-area-inset-bottom));
   z-index: 100;
 }
-
 .nav-item {
   flex: 1;
   display: flex;
@@ -266,39 +162,6 @@ body {
   color: #8f8fb8;
   transition: color 0.2s ease;
 }
-
 .nav-item.active { color: #00e676; }
 .nav-icon { font-size: 22px; line-height: 1; }
 .nav-label { font-size: 11px; font-weight: 600; letter-spacing: 0.3px; }
-
-/* ============ PROFILE ============ */
-.avatar-wrap { display: flex; justify-content: center; margin-bottom: 14px; }
-
-.avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #00e676, #00b0ff);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 46px;
-  border: 3px solid rgba(255, 255, 255, 0.12);
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
-}
-
-.user-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; word-break: break-word; }
-.user-username { font-size: 14px; color: #8f8fb8; margin-bottom: 4px; }
-
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px 4px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 20px;
-}
-.info-row:last-of-type { border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-.info-label { color: #8f8fb8; font-size: 14px; }
-.info-value { font-weight: 600; font-size: 14px; color: #e0e0ff; }
