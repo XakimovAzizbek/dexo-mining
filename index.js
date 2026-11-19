@@ -3,7 +3,7 @@ const START_BALANCE = 0.00001;
 const PER_TICK      = 0.00002;
 const AD_THRESHOLD  = 0.0002;
 const TICK_MS       = 1000;
-const BLOCK_ID      = "int-60710";
+const BLOCK_ID      = "int-60717";
 
 // Daily bonus
 const BONUS_AMOUNT      = 0.001;
