@@ -217,7 +217,7 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     }
 
     // Monetag Rewarded Popup ni chaqiramiz
-    show_10918742('pop')
+    show_12305389('pop')
       .then(() => {
         // Foydalanuvchi reklamani oxirigacha ko'rdi
         setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
