@@ -207,39 +207,54 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     startBtn.disabled = true;
     startBtn.textContent = "Reklama...";
 
-    // Monetag funksiyasi mavjudligini tekshiramiz
-    if (typeof show_10918742 !== 'function') {
-      setStatus("❌ Reklama tizimi yuklanmagan. Sahifani yangilang.");
-      startBtn.disabled = false;
-      startBtn.textContent = "Qayta urinish";
-      SND.error();
+    // 1. Tekshiruv: Yangi ID (12305389) mavjudligini tekshiramiz
+    if (typeof show_12305389 !== 'function') {
+      setStatus("⏳ Reklama tizimi yuklanmoqda, kuting...");
+      
+      // Agar SDK kechikib yuklanayotgan bo'lsa, 1.5 sekund kutib qayta urinamiz
+      setTimeout(() => {
+        if (typeof show_12305389 === 'function') {
+          executeAdLogic();
+        } else {
+          setStatus("❌ Reklama yuklanmadi. AdBlock o'chirilganini tekshiring yoki sahifani yangilang.");
+          startBtn.disabled = false;
+          startBtn.textContent = "▶️ Qayta urinish";
+          SND.error();
+        }
+      }, 1500);
       return;
     }
 
-    // Monetag Rewarded Popup ni chaqiramiz
-    show_12305389('pop')
-      .then(() => {
-        // Foydalanuvchi reklamani oxirigacha ko'rdi
-        setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
-        
-        // Reklama ko'rilgach hisoblagichni nolga tushiramiz
-        minedSinceAd = 0; 
-        saveState();
-        updateUI();
-        
-        haptic("notify", "success");
-        SND.success();
+    executeAdLogic();
 
-        // Darhol miningni boshlaymiz
-        startMining();
-      })
-      .catch((e) => {
-        // Foydalanuvchi reklamani yopib yubordi yoki xatolik yuz berdi
-        setStatus("⚠️ Reklama to'liq ko'rilmadi. Davom etish uchun qayta bosing.");
-        startBtn.disabled = false;
-        startBtn.textContent = "▶️ Qayta urinish";
-        SND.error();
-      });
+    // Reklamani chaqirish logikasi
+    function executeAdLogic() {
+      // Monetag Rewarded Popup ni chaqiramiz (Yangi ID bilan)
+      show_12305389('pop')
+        .then(() => {
+          // Foydalanuvchi reklamani oxirigacha ko'rdi
+          setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
+          
+          // Reklama ko'rilgach hisoblagichni nolga tushiramiz
+          minedSinceAd = 0; 
+          saveState();
+          updateUI();
+          
+          haptic("notify", "success");
+          SND.success();
+
+          // Darhol miningni boshlaymiz
+          startMining();
+        })
+        .catch((e) => {
+          // Foydalanuvchi reklamani yopib yubordi yoki xatolik yuz berdi
+          console.warn("Reklama xatosi:", e);
+          setStatus("⚠️ Reklama to'liq ko'rilmadi. Davom etish uchun qayta bosing.");
+          startBtn.disabled = false;
+          startBtn.textContent = "▶️ Qayta urinish";
+          SND.error();
+        });
+    }
   }
 
   // ===== KUNLIK BONUS =====
