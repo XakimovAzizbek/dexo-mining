@@ -14,8 +14,7 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   const PER_TICK      = 0.00002;
   const AD_THRESHOLD  = 0.0002;
   const TICK_MS       = 1000;
-
-  const BONUS_AMOUNT      = 0.001;
+  const BONUS_AMOUNT  = 0.001;
   const BONUS_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
   // ===== DOM =====
@@ -79,7 +78,49 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(ss).padStart(2, "0")}`;
   }
 
-  // ===== BALANCE COUNT-UP =====
+  function haptic(type, style) {
+    try {
+      const hf = window.Telegram?.WebApp?.HapticFeedback;
+      if (!hf) return;
+      if (type === "impact") hf.impactOccurred(style || "medium");
+      if (type === "notify") hf.notificationOccurred(style || "success");
+    } catch (e) {}
+  }
+
+  // ===== SERVER BILAN ALOQA =====
+  async function syncBalance(action, amount = 0) {
+    if (!window.Telegram?.WebApp?.initData) return;
+    try {
+      const res = await fetch('/endpoints/balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initData: Telegram.WebApp.initData,
+          action: action, // 'get' yoki 'update'
+          amount: amount
+        })
+      });
+      const data = await res.json();
+      if (action === 'get') {
+        balance = data.balance;
+      } else {
+        balance = data.balance;
+      }
+      updateUI();
+    } catch (e) {
+      console.warn("Server bilan aloqa uzildi", e);
+    }
+  }
+
+  // Har 5 sekundda balansni serverga saqlash (Mining vaqtida)
+  setInterval(() => {
+    if (running && balance > 0) {
+      // Joriy balansni serverga yuboramiz (faqat farqni emas, umumiy summani saqlash uchun maxsus logika kerak bo'ladi, hozircha soddalik uchun jami qo'shilgan summani yuboramiz)
+      // Eslatma: Real loyihada faqat "delta" (oxirgi 5 sekundda qo'shilgan pul) yuboriladi.
+    }
+  }, 5000);
+
+  // ===== BALANCE UI =====
   function setBalanceImmediate(val) {
     balanceAnimId++;
     displayValue = val;
@@ -129,34 +170,6 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
   function setStatus(t) { statusEl.textContent = t; }
 
-  function haptic(type, style) {
-    try {
-      const hf = window.Telegram?.WebApp?.HapticFeedback;
-      if (!hf) return;
-      if (type === "impact") hf.impactOccurred(style || "medium");
-      if (type === "notify") hf.notificationOccurred(style || "success");
-    } catch (e) {}
-  }
-
-  function saveState() {
-    window.__SS.saveState(balance, minedSinceAd, lastBonusAt);
-  }
-
-  function loadState() {
-    const s = window.__SS.loadState();
-    balance = s.v || 0;
-    minedSinceAd = s.m || 0;
-    lastBonusAt = s.b || 0;
-  }
-
-  async function loadCloudState() {
-    const c = await window.__SS.loadCloudState();
-    if (!c) return;
-    if (c.v > balance)      balance = c.v;
-    if (c.m > minedSinceAd) minedSinceAd = c.m;
-    if (c.b > lastBonusAt)  lastBonusAt = c.b;
-  }
-
   // ===== MINING =====
   function startMining() {
     if (running) return;
@@ -170,21 +183,22 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     setStatus("⛏️ Mining ishlamoqda...");
 
     if (pickaxeEl) pickaxeEl.classList.add("active");
-
     updateUI();
-    saveState();
 
+    // Har sekundda mahalliy hisoblaymiz
     timer = setInterval(() => {
       balance      += PER_TICK;
       minedSinceAd += PER_TICK;
       tickCounter++;
-      saveState();
       updateUI();
 
-      // Har 5 sekundda yumshoq tick ovozi
-      if (tickCounter % 5 === 0) SND.tick();
+      if (tickCounter % 5 === 0) {
+        SND.tick();
+        // Serverga har 5 sekundda yangi balansni yuboramiz
+        // (Eslatma: xavfsizlik uchun faqat 0.0001 qo'shilganini aytamiz)
+        syncBalance('update', PER_TICK * 5); 
+      }
 
-      // Reklama chegarasiga yetganda to'xtaymiz
       if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
         stopMining();
         setStatus("📺 Davom etish uchun tugmani bosing");
@@ -207,16 +221,12 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     startBtn.disabled = true;
     startBtn.textContent = "Reklama...";
 
-    // 1. Tekshiruv: Yangi ID (12305389) mavjudligini tekshiramiz
     if (typeof show_12305389 !== 'function') {
       setStatus("⏳ Reklama tizimi yuklanmoqda, kuting...");
-      
-      // Agar SDK kechikib yuklanayotgan bo'lsa, 1.5 sekund kutib qayta urinamiz
       setTimeout(() => {
-        if (typeof show_12305389 === 'function') {
-          executeAdLogic();
-        } else {
-          setStatus("❌ Reklama yuklanmadi. AdBlock o'chirilganini tekshiring yoki sahifani yangilang.");
+        if (typeof show_12305389 === 'function') executeAdLogic();
+        else {
+          setStatus("❌ Reklama yuklanmadi.");
           startBtn.disabled = false;
           startBtn.textContent = "▶️ Qayta urinish";
           SND.error();
@@ -227,29 +237,20 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
     executeAdLogic();
 
-    // Reklamani chaqirish logikasi
     function executeAdLogic() {
-      // Monetag Rewarded Popup ni chaqiramiz (Yangi ID bilan)
       show_12305389('pop')
         .then(() => {
-          // Foydalanuvchi reklamani oxirigacha ko'rdi
           setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
-          
-          // Reklama ko'rilgach hisoblagichni nolga tushiramiz
           minedSinceAd = 0; 
-          saveState();
           updateUI();
           
           haptic("notify", "success");
           SND.success();
-
-          // Darhol miningni boshlaymiz
           startMining();
         })
         .catch((e) => {
-          // Foydalanuvchi reklamani yopib yubordi yoki xatolik yuz berdi
           console.warn("Reklama xatosi:", e);
-          setStatus("⚠️ Reklama to'liq ko'rilmadi. Davom etish uchun qayta bosing.");
+          setStatus("⚠️ Reklama to'liq ko'rilmadi. Qayta bosing.");
           startBtn.disabled = false;
           startBtn.textContent = "▶️ Qayta urinish";
           SND.error();
@@ -327,8 +328,10 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
     lastBonusAt = window.__SS.safeNow();
     balance += BONUS_AMOUNT;
-
-    saveState();
+    
+    // Serverga qo'shamiz
+    syncBalance('update', BONUS_AMOUNT);
+    
     updateUI();
     updateBonusUI();
     pulseBalance();
@@ -355,8 +358,6 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   startBtn.addEventListener("click", () => {
     SND.click();
     haptic("impact", "light");
-    
-    // Tugma bosilganda HAR DOIM reklama chiqadi va keyin mining boshlanadi
     showAdAndContinue();
   });
 
@@ -364,24 +365,17 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
   // ===== INIT =====
   (async function init() {
-    // Particles background
     PT.init(35);
-
-    loadState();
-    await loadCloudState();
-    updateUI();
+    
+    // Dastlab serverdan balansni yuklaymiz
+    await syncBalance('get');
+    
     updateBonusUI();
     startBonusTicker();
 
-    // Boshlang'ich holatga qarab tugma matnini o'rnatish
     if (balance > 0) {
-      if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
-        setStatus("📺 Davom etish uchun tugmani bosing");
-        startBtn.textContent = "▶️ Davom etish (Reklama)";
-      } else {
-        setStatus("Balans yuklandi. Davom etish uchun tugmani bosing.");
-        startBtn.textContent = "▶️ Davom etish (Reklama)";
-      }
+      setStatus("Balans yuklandi. Davom etish uchun bosing.");
+      startBtn.textContent = "▶️ Davom etish (Reklama)";
     } else {
       setStatus("Boshlash uchun tugmani bosing");
       startBtn.textContent = "▶️ Boshlash (Reklama)";

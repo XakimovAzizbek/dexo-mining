@@ -39,12 +39,9 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   };
 
   // ===== STATE =====
-  const state = { balance: 0, mined: 0, lastBonus: 0, wallet: "" };
-
-  // Balance display
-  let displayValue  = 0;
-  let balanceAnimId = 0;
-  let firstRender   = true;
+  let balance = 0;
+  let mined = 0; // Hozircha brauzerda saqlanadi, lekin uni ham keyin serverga o'tkazamiz
+  let lastBonus = 0;
 
   // ===== HELPERS =====
   function formatMoney(n) { return "$" + n.toFixed(5); }
@@ -74,57 +71,24 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     } catch (e) {}
   }
 
-  function setBalanceImmediate(val) {
-    balanceAnimId++;
-    displayValue = val;
-    els.balance.textContent = formatMoney(val);
-  }
-
-  function animateBalance(target) {
-    const myId = ++balanceAnimId;
-    const start = displayValue;
-    const diff = target - start;
-
-    if (Math.abs(diff) < 0.0000001) {
-      displayValue = target;
-      els.balance.textContent = formatMoney(target);
-      return;
-    }
-
-    const duration = Math.abs(diff) > 0.0005 ? 700 : 900;
-    const startTime = performance.now();
-
-    function step(now) {
-      if (myId !== balanceAnimId) return;
-      const p = Math.min((now - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - p, 3);
-      displayValue = start + diff * eased;
-      els.balance.textContent = formatMoney(displayValue);
-      if (p < 1) requestAnimationFrame(step);
-      else displayValue = target;
-    }
-    requestAnimationFrame(step);
-  }
-
-  // ===== STORAGE =====
-  function loadLocal() {
-    const s = window.__SS.loadState();
-    state.balance   = s.v || 0;
-    state.mined     = s.m || 0;
-    state.lastBonus = s.b || 0;
-    state.wallet    = window.__SS.loadWallet();
-  }
-
-  async function loadCloud() {
-    const c = await window.__SS.loadCloudState();
-    if (c) {
-      if (c.v > state.balance)   state.balance   = c.v;
-      if (c.m > state.mined)     state.mined     = c.m;
-      if (c.b > state.lastBonus) state.lastBonus = c.b;
-    }
-    if (!state.wallet) {
-      const cw = await window.__SS.loadCloudWallet();
-      if (cw) state.wallet = cw;
+  // ===== SERVER BILAN ALOQA =====
+  async function fetchBalance() {
+    if (!window.Telegram?.WebApp?.initData) return;
+    try {
+      const res = await fetch('/endpoints/balance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initData: Telegram.WebApp.initData,
+          action: 'get'
+        })
+      });
+      const data = await res.json();
+      balance = data.balance;
+      els.balance.textContent = formatMoney(balance);
+      renderWithdrawBtn();
+    } catch (e) {
+      console.warn("Balansni yuklashda xato", e);
     }
   }
 
@@ -155,18 +119,14 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     }
   }
 
-  function renderBalance() {
-    if (firstRender) {
-      setBalanceImmediate(state.balance);
-      firstRender = false;
-    } else {
-      animateBalance(state.balance);
-    }
-  }
-
   function renderStats() {
-    if (state.balance > 0) {
-      if (state.mined >= AD_THRESHOLD - 1e-9) {
+    // Hozircha mined (adgacha yig'ilgan) ni localdan olamiz
+    const s = window.__SS.loadState();
+    mined = s.m || 0;
+    lastBonus = s.b || 0;
+
+    if (balance > 0) {
+      if (mined >= AD_THRESHOLD - 1e-9) {
         els.status.textContent = "Kutilmoqda";
         els.status.style.color = "var(--gold)";
         els.nextAd.textContent = "Reklama tayyor!";
@@ -174,7 +134,7 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
       } else {
         els.status.textContent = "Faol ⛏️";
         els.status.style.color = "var(--green)";
-        const rem = Math.max(AD_THRESHOLD - state.mined, 0);
+        const rem = Math.max(AD_THRESHOLD - mined, 0);
         els.nextAd.textContent = "$" + rem.toFixed(5);
         els.nextAd.style.color = "var(--cyan)";
       }
@@ -186,90 +146,35 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     }
 
     const now = window.__SS.safeNow();
-    const bonusReady = now - state.lastBonus >= BONUS_INTERVAL_MS;
+    const bonusReady = now - lastBonus >= BONUS_INTERVAL_MS;
     if (bonusReady) {
       els.bonus.textContent = "Tayyor! 🎁";
       els.bonus.style.color = "var(--green)";
     } else {
-      els.bonus.textContent = formatCountdown(BONUS_INTERVAL_MS - (now - state.lastBonus));
+      els.bonus.textContent = formatCountdown(BONUS_INTERVAL_MS - (now - lastBonus));
       els.bonus.style.color = "var(--cyan)";
     }
   }
 
-  function renderWallet() {
-    if (state.wallet) els.wallet.value = state.wallet;
-  }
-
   function renderWithdrawBtn() {
-    const can = state.balance >= WITHDRAW_MIN && state.wallet.length >= WALLET_MIN_LEN;
+    const can = balance >= WITHDRAW_MIN; // Hamyon keyingi bosqichda ulanadi
     els.withdrawBtn.disabled = !can;
   }
 
   // ===== ACTIONS =====
   async function saveWallet() {
     if (!window.__SS.rateLimit("save_wallet", 1500)) return;
-
     const val = (els.wallet.value || "").trim();
-
     if (val.length < WALLET_MIN_LEN) {
       haptic("error");
       SND.error();
-      showToast("❌ Manzil juda qisqa (min " + WALLET_MIN_LEN + " belgi)", "var(--red)");
+      showToast("❌ Manzil juda qisqa", "var(--red)");
       return;
     }
-
-    state.wallet = val;
     window.__SS.saveWallet(val);
-
     haptic("success");
     SND.success();
     showToast("✅ Hamyon manzili saqlandi", "var(--green)");
-    renderWithdrawBtn();
-  }
-
-  async function withdraw() {
-    if (!window.__SS.rateLimit("withdraw", 3000)) return;
-
-    if (state.balance < WITHDRAW_MIN) {
-      haptic("error");
-      SND.error();
-      showToast(`❌ Minimal yechish: $${WITHDRAW_MIN.toFixed(2)}`, "var(--red)");
-      return;
-    }
-    if (state.wallet.length < WALLET_MIN_LEN) {
-      haptic("error");
-      SND.error();
-      showToast("❌ Avval hamyon manzilini kiriting", "var(--red)");
-      return;
-    }
-
-    haptic("heavy");
-
-    const user = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    const request = {
-      userId:    user?.id || 0,
-      firstName: user?.first_name || "",
-      lastName:  user?.last_name || "",
-      username:  user?.username || "",
-      wallet:    state.wallet,
-      amount:    parseFloat(state.balance.toFixed(5)),
-      ts:        window.__SS.safeNow(),
-      status:    "pending",
-    };
-
-    const arr = window.__SS.loadWithdrawals();
-    arr.push(request);
-    if (arr.length > 50) arr.splice(0, arr.length - 50);
-    window.__SS.saveWithdrawals(arr);
-
-    SND.bonus();
-    setTimeout(() => SND.coin(), 100);
-    haptic("success");
-
-    showToast(
-      `✅ So'rov qabul qilindi: $${request.amount.toFixed(5)}\nAdmin tez orada ko'rib chiqadi`,
-      "var(--green)"
-    );
   }
 
   // ===== SOUND TOGGLE =====
@@ -284,38 +189,22 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
 
   // ===== EVENTS =====
   els.saveWalletBtn.addEventListener("click", saveWallet);
-  els.withdrawBtn.addEventListener("click", withdraw);
 
-  els.wallet.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") saveWallet();
-  });
-
+  // Har 3 sekundda serverdan balansni yangilab turamiz (profil sahifasida turgan vaqtda)
   setInterval(() => {
-    loadLocal();
+    fetchBalance();
     renderStats();
-    renderWithdrawBtn();
-  }, 1000);
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) {
-      loadLocal();
-      renderBalance();
-      renderStats();
-      renderWithdrawBtn();
-    }
-  });
+  }, 3000);
 
   // ===== INIT =====
   (async function init() {
     PT.init(25);
-
-    loadLocal();
-    await loadCloud();
-
+    
+    // Dastlab serverdan balansni yuklaymiz
+    await fetchBalance();
+    
     renderUser();
-    renderBalance();
     renderStats();
-    renderWallet();
-    renderWithdrawBtn();
+    els.wallet.value = window.__SS.loadWallet();
   })();
 })();
