@@ -101,24 +101,20 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
         })
       });
       const data = await res.json();
+      
       if (action === 'get') {
+        // Faqat dastlabki yuklanishda yoki profilga o'tilganda ekranga yozamiz
         balance = data.balance;
-      } else {
-        balance = data.balance;
+        updateUI();
+      } else if (action === 'update') {
+        // Mining paytida serverdan kelgan javob bilan ekrandagi balansni sakratmaymiz.
+        // Faqat serverdagi haqiqiy balansni xotiramizga olamiz.
+        balance = data.balance; 
       }
-      updateUI();
     } catch (e) {
       console.warn("Server bilan aloqa uzildi", e);
     }
   }
-
-  // Har 5 sekundda balansni serverga saqlash (Mining vaqtida)
-  setInterval(() => {
-    if (running && balance > 0) {
-      // Joriy balansni serverga yuboramiz (faqat farqni emas, umumiy summani saqlash uchun maxsus logika kerak bo'ladi, hozircha soddalik uchun jami qo'shilgan summani yuboramiz)
-      // Eslatma: Real loyihada faqat "delta" (oxirgi 5 sekundda qo'shilgan pul) yuboriladi.
-    }
-  }, 5000);
 
   // ===== BALANCE UI =====
   function setBalanceImmediate(val) {
@@ -185,17 +181,15 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     if (pickaxeEl) pickaxeEl.classList.add("active");
     updateUI();
 
-    // Har sekundda mahalliy hisoblaymiz
     timer = setInterval(() => {
       balance      += PER_TICK;
       minedSinceAd += PER_TICK;
       tickCounter++;
       updateUI();
 
+      // Har 5 sekundda serverga 5 sekundlik daromadni yuboramiz
       if (tickCounter % 5 === 0) {
         SND.tick();
-        // Serverga har 5 sekundda yangi balansni yuboramiz
-        // (Eslatma: xavfsizlik uchun faqat 0.0001 qo'shilganini aytamiz)
         syncBalance('update', PER_TICK * 5); 
       }
 
