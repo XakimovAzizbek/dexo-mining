@@ -14,7 +14,6 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   const PER_TICK      = 0.00002;
   const AD_THRESHOLD  = 0.0002;
   const TICK_MS       = 1000;
-  const BLOCK_ID      = "int-60717";
 
   const BONUS_AMOUNT      = 0.001;
   const BONUS_INTERVAL_MS = 24 * 60 * 60 * 1000;
@@ -37,7 +36,6 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   let timer        = null;
   let bonusTimer   = null;
   let running      = false;
-  let adController = null;
 
   // Display state
   let displayValue  = 0;
@@ -159,19 +157,9 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     if (c.b > lastBonusAt)  lastBonusAt = c.b;
   }
 
-  // ===== ADSGRAM =====
-  function initAds() {
-    if (!adController && window.Adsgram) {
-      adController = window.Adsgram.init({ blockId: BLOCK_ID });
-    }
-  }
-
   // ===== MINING =====
   function startMining() {
     if (running) return;
-    
-    // Rate limitni olib tashlaymiz, chunki reklamadan keyin darhol boshlanishi kerak
-    // if (!window.__SS.rateLimit("start", 500)) return;
 
     if (balance <= 0) balance = START_BALANCE;
 
@@ -196,7 +184,7 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
       // Har 5 sekundda yumshoq tick ovozi
       if (tickCounter % 5 === 0) SND.tick();
 
-      // Reklama chegarasiga yetganda to'xtaymiz (lekin reklamani o'zimiz chiqarmaymiz)
+      // Reklama chegarasiga yetganda to'xtaymiz
       if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
         stopMining();
         setStatus("📺 Davom etish uchun tugmani bosing");
@@ -213,24 +201,25 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     if (timer) { clearInterval(timer); timer = null; }
   }
 
-  // ===== REKLAMA (Faqat tugma bosilganda ishlaydi) =====
+  // ===== REKLAMA (MONETAG REWARDED POPUP) =====
   function showAdAndContinue() {
     setStatus("📺 Reklama yuklanmoqda...");
     startBtn.disabled = true;
     startBtn.textContent = "Reklama...";
 
-    initAds();
-
-    if (!adController) {
-      setStatus("❌ Reklama yuklanmadi. Qayta urinib ko'ring.");
+    // Monetag funksiyasi mavjudligini tekshiramiz
+    if (typeof show_10918742 !== 'function') {
+      setStatus("❌ Reklama tizimi yuklanmagan. Sahifani yangilang.");
       startBtn.disabled = false;
       startBtn.textContent = "Qayta urinish";
       SND.error();
       return;
     }
 
-    adController.show()
+    // Monetag Rewarded Popup ni chaqiramiz
+    show_10918742('pop')
       .then(() => {
+        // Foydalanuvchi reklamani oxirigacha ko'rdi
         setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
         
         // Reklama ko'rilgach hisoblagichni nolga tushiramiz
@@ -244,7 +233,8 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
         // Darhol miningni boshlaymiz
         startMining();
       })
-      .catch(() => {
+      .catch((e) => {
+        // Foydalanuvchi reklamani yopib yubordi yoki xatolik yuz berdi
         setStatus("⚠️ Reklama to'liq ko'rilmadi. Davom etish uchun qayta bosing.");
         startBtn.disabled = false;
         startBtn.textContent = "▶️ Qayta urinish";
