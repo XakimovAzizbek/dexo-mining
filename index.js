@@ -100,8 +100,6 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     }
 
     const absDiff = Math.abs(diff);
-    // Mining tick (kichik farq) — 900ms = deyarli sekundga teng (silliq)
-    // Bonus/big change — 700ms (tezroq, aks holda juda sekin ko'rinadi)
     const duration = absDiff > 0.0005 ? 700 : 900;
     const startTime = performance.now();
 
@@ -171,7 +169,9 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   // ===== MINING =====
   function startMining() {
     if (running) return;
-    if (!window.__SS.rateLimit("start", 500)) return;
+    
+    // Rate limitni olib tashlaymiz, chunki reklamadan keyin darhol boshlanishi kerak
+    // if (!window.__SS.rateLimit("start", 500)) return;
 
     if (balance <= 0) balance = START_BALANCE;
 
@@ -196,9 +196,13 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
       // Har 5 sekundda yumshoq tick ovozi
       if (tickCounter % 5 === 0) SND.tick();
 
+      // Reklama chegarasiga yetganda to'xtaymiz (lekin reklamani o'zimiz chiqarmaymiz)
       if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
         stopMining();
-        showAd();
+        setStatus("📺 Davom etish uchun tugmani bosing");
+        startBtn.disabled = false;
+        startBtn.textContent = "▶️ Davom etish (Reklama)";
+        SND.click();
       }
     }, TICK_MS);
   }
@@ -209,8 +213,8 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     if (timer) { clearInterval(timer); timer = null; }
   }
 
-  // ===== REKLAMA =====
-  function showAd() {
+  // ===== REKLAMA (Faqat tugma bosilganda ishlaydi) =====
+  function showAdAndContinue() {
     setStatus("📺 Reklama yuklanmoqda...");
     startBtn.disabled = true;
     startBtn.textContent = "Reklama...";
@@ -228,22 +232,22 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     adController.show()
       .then(() => {
         setStatus("✅ Reklama ko'rildi! Mining davom etmoqda...");
-        minedSinceAd = 0;
+        
+        // Reklama ko'rilgach hisoblagichni nolga tushiramiz
+        minedSinceAd = 0; 
         saveState();
         updateUI();
+        
         haptic("notify", "success");
         SND.success();
 
-        setTimeout(() => {
-          startBtn.disabled = false;
-          startBtn.textContent = "Boshlash";
-          startMining();
-        }, 1000);
+        // Darhol miningni boshlaymiz
+        startMining();
       })
       .catch(() => {
-        setStatus("⚠️ Reklama to'liq ko'rilmadi. Qayta urinib ko'ring.");
+        setStatus("⚠️ Reklama to'liq ko'rilmadi. Davom etish uchun qayta bosing.");
         startBtn.disabled = false;
-        startBtn.textContent = "Qayta urinish";
+        startBtn.textContent = "▶️ Qayta urinish";
         SND.error();
       });
   }
@@ -346,11 +350,9 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
   startBtn.addEventListener("click", () => {
     SND.click();
     haptic("impact", "light");
-    if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
-      showAd();
-    } else {
-      startMining();
-    }
+    
+    // Tugma bosilganda HAR DOIM reklama chiqadi va keyin mining boshlanadi
+    showAdAndContinue();
   });
 
   bonusBtn.addEventListener("click", claimBonus);
@@ -366,8 +368,18 @@ if (!window.__SND || !window.__PT) throw new Error("Effects not loaded");
     updateBonusUI();
     startBonusTicker();
 
+    // Boshlang'ich holatga qarab tugma matnini o'rnatish
     if (balance > 0) {
-      setStatus("Balans yuklandi. Davom etish uchun tugmani bosing.");
+      if (minedSinceAd >= AD_THRESHOLD - 1e-9) {
+        setStatus("📺 Davom etish uchun tugmani bosing");
+        startBtn.textContent = "▶️ Davom etish (Reklama)";
+      } else {
+        setStatus("Balans yuklandi. Davom etish uchun tugmani bosing.");
+        startBtn.textContent = "▶️ Davom etish (Reklama)";
+      }
+    } else {
+      setStatus("Boshlash uchun tugmani bosing");
+      startBtn.textContent = "▶️ Boshlash (Reklama)";
     }
   })();
 })();
